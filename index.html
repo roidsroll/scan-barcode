@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barcode Scanner</title>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 20px auto; text-align: center; }
+        #reader { width: 100%; background-color: #f0f0f0; border-radius: 8px; }
+        #result { margin-top: 20px; padding: 15px; border: 2px dashed #007bff; border-radius: 8px; font-size: 1.2rem; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h2>Barcode Scanner Kamera</h2>
+    <div id="reader"></div>
+    <div id="result">Hasil scan bakal muncul di sini...</div>
+
+    <script>
+        function onScanSuccess(decodedText) {
+            document.getElementById('result').innerText = `Hasil Scan: ${decodedText}`;
+        }
+        const formatsToSupport = [
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.CODE_39
+        ];
+        let html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
+            fps: 10, 
+            qrbox: { width: 300, height: 150 },
+            formatsToSupport: formatsToSupport 
+        });
+        html5QrcodeScanner.render(onScanSuccess, (err) => {});
+    </script>
+</body>
+</html>

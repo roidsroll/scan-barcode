@@ -1,253 +1,167 @@
 <!DOCTYPE html>
-
 <html lang="id">
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Super Barcode Scanner & Generator</title>
-
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-
     
-
     <style>
-
         body { font-family: sans-serif; max-width: 600px; margin: 20px auto; padding: 0 10px; text-align: center; color: #333; }
-
         .section { margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; }
-
-        #reader { width: 100%; background-color: #f0f0f0; border-radius: 8px; overflow: hidden; }
-
-        #result { margin-top: 15px; padding: 15px; border: 2px dashed #007bff; border-radius: 8px; font-size: 1.2rem; font-weight: bold; background: #fff; word-break: break-all; }
-
+        #reader { width: 100%; background-color: #f0f0f0; border-radius: 8px; overflow: hidden; position: relative; }
+        #result { margin-top: 15px; padding: 15px; border: 2px dashed #007bff; border-radius: 8px; font-size: 1.2rem; font-weight: bold; background: #fff; word-break: break-all; transition: all 0.3s ease; }
         
-
         /* Input & Button Styling */
-
         input[type="text"], input[type="file"] { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-
         button { background-color: #28a745; color: white; border: none; padding: 10px 20px; font-size: 1rem; border-radius: 4px; cursor: pointer; font-weight: bold; }
-
         button:hover { background-color: #218838; }
-
         
-
+        /* Tombol Salin */
+        .btn-copy { background-color: #007bff; margin-top: 10px; display: none; width: 100%; }
+        .btn-copy:hover { background-color: #0056b3; }
+        
         /* Barcode Result Container */
-
         #barcodeContainer { margin-top: 15px; padding: 15px; background: #fff; border: 1px solid #ccc; display: none; border-radius: 4px; }
-
         
-
-        /* FIX MIRROR: Membalikkan arah video kamera secara paksa */
-
-        #reader video {
-
-            transform: scaleX(-1) !important;
-
-            -webkit-transform: scaleX(-1) !important;
-
+        /* Notifikasi Sukses Visual (Flash Efek) */
+        .scan-success-flash {
+            border-color: #28a745 !important;
+            background-color: #d4edda !important;
+            color: #155724 !important;
         }
-
     </style>
-
 </head>
-
 <body>
-
-
 
     <h2>Barcode Utility Tools</h2>
 
-
-
     <div class="section">
-
         <h3>1. Scan Barcode 1D / QR Code</h3>
-
         
-
         <div id="reader"></div>
-
         
-
         <div style="margin-top: 15px; text-align: left;">
-
             <label style="font-weight: bold; font-size: 0.9rem;">Atau Scan dari File Gambar:</label>
-
             <input type="file" id="file-input" accept="image/*">
-
         </div>
-
-
 
         <div id="result">Hasil scan bakal muncul di sini...</div>
-
+        <button id="copy-btn" class="btn-copy" onclick="copyToClipboard()">📋 Salin Hasil Scan</button>
     </div>
-
-
 
     <div class="section">
-
         <h3>2. Generate Barcode (Code 128)</h3>
-
         <input type="text" id="barcode-text" placeholder="Masukkan teks atau angka (Contoh: 0001625241316)">
-
         <button onclick="generateBarcode()">Buat Barcode</button>
-
         
-
         <div id="barcodeContainer">
-
             <svg id="barcode"></svg>
-
         </div>
-
     </div>
 
-
-
     <script>
+        // Global variable untuk menyimpan teks hasil scan mentah
+        let rawDecodedText = "";
 
         // ================= LOGIKA SCANNER =================
-
         function onScanSuccess(decodedText) {
-
-            document.getElementById('result').innerText = `Hasil Scan: ${decodedText}`;
-
+            rawDecodedText = decodedText;
+            const resultDiv = document.getElementById('result');
+            const copyBtn = document.getElementById('copy-btn');
+            
+            // Tampilkan hasil
+            resultDiv.innerText = `✅ Berhasil Discan:\n${decodedText}`;
+            
+            // Efek Notifikasi Flash Hijau
+            resultDiv.classList.add('scan-success-flash');
+            setTimeout(() => {
+                resultDiv.classList.remove('scan-success-flash');
+            }, 1000);
+            
+            // Tampilkan tombol salin
+            copyBtn.style.display = "block";
+            copyBtn.innerText = "📋 Salin Hasil Scan";
         }
-
         
-
+        // Fitur Salin ke Clipboard
+        function copyToClipboard() {
+            if (!rawDecodedText) return;
+            
+            navigator.clipboard.writeText(rawDecodedText).then(() => {
+                const copyBtn = document.getElementById('copy-btn');
+                copyBtn.innerText = "✨ Berhasil Disalin!";
+                setTimeout(() => {
+                    copyBtn.innerText = "📋 Salin Hasil Scan";
+                }, 2000);
+            }).catch(err => {
+                alert("Gagal menyalin teks.");
+            });
+        }
+        
         const formatsToSupport = [
-
             Html5QrcodeSupportedFormats.CODE_128,
-
             Html5QrcodeSupportedFormats.EAN_13,
-
             Html5QrcodeSupportedFormats.CODE_39,
-
             Html5QrcodeSupportedFormats.QR_CODE
-
         ];
-
         
-
         // 1. Inisialisasi Scanner Kamera
-
+        // BUG FIX MIRROR: Menghapus custom CSS transform: scaleX(-1) bawaan sebelumnya.
+        // Library html5-qrcode secara default sudah menangani mirroring kamera depan otomatis.
         let html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
-
             fps: 10, 
-
             qrbox: { width: 300, height: 150 },
-
             formatsToSupport: formatsToSupport,
-
             rememberLastUsedCamera: true,
-
             aspectRatio: 1.777778
-
         });
-
         html5QrcodeScanner.render(onScanSuccess, (err) => {});
 
-
-
         // 2. Fitur Scan Lewat File Gambar
-
         const html5QrCode = new Html5QrCode("reader");
-
         const fileInput = document.getElementById('file-input');
-
         
-
         fileInput.addEventListener('change', e => {
-
             if (e.target.files.length == 0) {
-
                 return;
-
             }
-
-
 
             const imageFile = e.target.files[0];
-
-            // Bersihkan teks hasil sebelum memproses file baru
-
             document.getElementById('result').innerText = "Sedang memproses gambar...";
-
-
+            document.getElementById('copy-btn').style.display = "none";
 
             html5QrCode.scanFile(imageFile, true, formatsToSupport)
-
                 .then(decodedText => {
-
                     onScanSuccess(decodedText);
-
                 })
-
                 .catch(err => {
-
                     document.getElementById('result').innerText = `Gagal scan: Barcode tidak terdeteksi atau format salah.`;
-
+                    document.getElementById('copy-btn').style.display = "none";
                 });
-
         });
 
-
-
         // ================= LOGIKA GENERATOR =================
-
         function generateBarcode() {
-
             const text = document.getElementById('barcode-text').value;
-
             const container = document.getElementById('barcodeContainer');
-
             
-
             if (text.trim() === "") {
-
                 alert("Masukkan teks atau angka terlebih dahulu!");
-
                 return;
-
             }
-
             
-
-            // Tampilkan container barcode
-
             container.style.display = "block";
-
             
-
-            // Generate menggunakan Code 128 (format barcode 1D standar paling fleksibel)
-
             JsBarcode("#barcode", text, {
-
                 format: "CODE128",
-
                 lineColor: "#000",
-
                 width: 2,
-
                 height: 80,
-
-                displayValue: true // Menampilkan teks di bawah batangan barcode
-
+                displayValue: true
             });
-
         }
-
     </script>
-
 </body>
-
 </html>

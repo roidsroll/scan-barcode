@@ -10,10 +10,10 @@
         #reader { width: 100%; background-color: #f0f0f0; border-radius: 8px; }
         #result { margin-top: 20px; padding: 15px; border: 2px dashed #007bff; border-radius: 8px; font-size: 1.2rem; font-weight: bold; }
         
-        /* TRICK FIX MIRROR: Paksa video kamera biar TIDAK FLIP/MIRROR */
+        /* FIX MIRROR: Membalikkan arah video secara paksa */
         #reader video {
-            transform: scaleX(1) !important;
-            -webkit-transform: scaleX(1) !important;
+            transform: scaleX(-1) !important;
+            -webkit-transform: scaleX(-1) !important;
         }
     </style>
 </head>
@@ -37,7 +37,6 @@
             fps: 10, 
             qrbox: { width: 300, height: 150 },
             formatsToSupport: formatsToSupport,
-            // Matikan fitur mirror bawaan library jika terdeteksi kamera depan
             rememberLastUsedCamera: true,
             aspectRatio: 1.777778
         });

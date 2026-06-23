@@ -9,6 +9,12 @@
         body { font-family: sans-serif; max-width: 600px; margin: 20px auto; text-align: center; }
         #reader { width: 100%; background-color: #f0f0f0; border-radius: 8px; }
         #result { margin-top: 20px; padding: 15px; border: 2px dashed #007bff; border-radius: 8px; font-size: 1.2rem; font-weight: bold; }
+        
+        /* TRICK FIX MIRROR: Paksa video kamera biar TIDAK FLIP/MIRROR */
+        #reader video {
+            transform: scaleX(1) !important;
+            -webkit-transform: scaleX(1) !important;
+        }
     </style>
 </head>
 <body>
@@ -20,16 +26,22 @@
         function onScanSuccess(decodedText) {
             document.getElementById('result').innerText = `Hasil Scan: ${decodedText}`;
         }
+        
         const formatsToSupport = [
             Html5QrcodeSupportedFormats.CODE_128,
             Html5QrcodeSupportedFormats.EAN_13,
             Html5QrcodeSupportedFormats.CODE_39
         ];
+        
         let html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
             fps: 10, 
             qrbox: { width: 300, height: 150 },
-            formatsToSupport: formatsToSupport 
+            formatsToSupport: formatsToSupport,
+            // Matikan fitur mirror bawaan library jika terdeteksi kamera depan
+            rememberLastUsedCamera: true,
+            aspectRatio: 1.777778
         });
+        
         html5QrcodeScanner.render(onScanSuccess, (err) => {});
     </script>
 </body>
